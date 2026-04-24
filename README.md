@@ -1,19 +1,19 @@
-# JAuditor
+# JMXAuditor
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Maven Central](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fio%2Fgithub%2Fsagaraggarwal86%2Fjauditor-jmeter-plugin%2Fmaven-metadata.xml)](https://central.sonatype.com/artifact/io.github.sagaraggarwal86/jauditor-jmeter-plugin)
+[![Maven Central](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fio%2Fgithub%2Fsagaraggarwal86%2Fjmxauditor-jmeter-plugin%2Fmaven-metadata.xml)](https://central.sonatype.com/artifact/io.github.sagaraggarwal86/jmxauditor-jmeter-plugin)
 
 **Static analysis for JMeter scripts** — find scalability, correctness, and maintainability issues before the load test
 runs.
 
-JAuditor scans your `.jmx` test plan inside JMeter and surfaces findings across six quality categories: Correctness,
+JMXAuditor scans your `.jmx` test plan inside JMeter and surfaces findings across six quality categories: Correctness,
 Security, Scalability, Realism, Maintainability, Observability. It is **read-only** — it never touches your `.jmx` file
 and has zero impact on test execution.
 
 ## 1. Installation
 
-1. Download `jauditor-jmeter-plugin-0.1.0.jar` from
-   the [Releases page](https://github.com/sagaraggarwal86/JAuditor-jmeter-plugin/releases).
+1. Download `jmxauditor-jmeter-plugin-0.2.0.jar` from
+   the [Releases page](https://github.com/sagaraggarwal86/JMXAuditor-jmeter-plugin/releases).
 2. Drop it into `<JMETER_HOME>/lib/ext/`.
 3. Restart JMeter. The **Tools → Audit Script** menu item and toolbar button appear automatically.
 
@@ -64,14 +64,14 @@ audited.
 
 ## 6. Dark mode note
 
-JAuditor adapts its in-JMeter palette to the active Look & Feel. Tested against Metal and FlatLaf Dark. The HTML report
+JMXAuditor adapts its in-JMeter palette to the active Look & Feel. Tested against Metal and FlatLaf Dark. The HTML report
 ships with a tri-state theme toggle (auto → dark → light) — default is `auto`, which follows the reader's
 `prefers-color-scheme`; state lives on `documentElement.dataset.theme`. When embedding the report in PR descriptions
 or email, pick a theme explicitly to avoid reader-local variation.
 
 ## 7. Troubleshooting
 
-- **No menu item / toolbar button appears.** Check `jmeter.log` for lines prefixed `JAuditor:`. Initialization errors
+- **No menu item / toolbar button appears.** Check `jmeter.log` for lines prefixed `JMXAuditor:`. Initialization errors
   are logged and JMeter continues.
 - **"Open a test plan first to audit it."** Load a `.jmx` before clicking Audit.
 - **"This element no longer exists. Rescan."** The tree changed between scan and click. Click Rescan.

@@ -28,4 +28,4 @@ jobs:
       - name: Attach JAR to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: target/jauditor-jmeter-plugin-*.jar
+          files: target/jmxauditor-jmeter-plugin-*.jar

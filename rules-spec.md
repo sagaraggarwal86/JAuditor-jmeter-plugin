@@ -1,10 +1,10 @@
-# JAuditor Rule Specification
+# JMXAuditor Rule Specification
 
 Single source of truth for the 25 rules. Each entry mirrors what the rule class
 returns from `id()`, `category()`, `severity()`, `appliesTo()`, `description()`,
 and the `Title / Description / Suggestion` strings passed to `AbstractRule.make(...)`.
 Keep this file in sync with the rule classes under
-`src/main/java/io/github/sagaraggarwal86/jmeter/jauditor/rules/`.
+`src/main/java/io/github/sagaraggarwal86/jmeter/jmxauditor/rules/`.
 
 ## Related documents
 
@@ -28,7 +28,7 @@ Keep this file in sync with the rule classes under
   memo keys (`anyHttpSampler`, `anyCookieManager`) are populated before dependent
   per-node rules consume them.
 - **Redaction** (invariant 9): `PLAINTEXT_PASSWORD_IN_BODY`, `PLAINTEXT_TOKEN_IN_HEADER`,
-  and `CREDENTIALS_IN_UDV` pass credential values through `JAuditorLog.redact()`
+  and `CREDENTIALS_IN_UDV` pass credential values through `JMXAuditorLog.redact()`
   before inserting them into finding descriptions. The stored string is always `****`.
 - **Property keys** are JMeter's internal string keys (e.g., `ThreadGroup.num_threads`),
   not the UI labels. Read via `AbstractRule.propString / propBool / propInt`.
@@ -161,10 +161,10 @@ Maintainability (whole-tree first) — see CLAUDE.md for why.
   argument, matches the name (trimmed) case-insensitively against regex
   `^(password|passwd|pwd|secret|token|apikey|api_key)$`. Skips the argument when
   name or value is null, when the value contains `${`, or when the value is blank.
-  Finding description carries the value passed through `JAuditorLog.redact()` (invariant 9).
+  Finding description carries the value passed through `JMXAuditorLog.redact()` (invariant 9).
 - **Title:** `Plaintext credential in request body`
 - **Description:**
-  `The HTTP request sends the field '{name}' with a hard-coded value. That value lives directly inside the .jmx file, so anyone who opens the test plan or checks it into version control can read the real credential. Passwords and tokens written into .jmx files are a common source of accidental leaks, especially when the file ends up in a CI log or a screenshot. Value redacted to **** — JAuditor never prints credential contents.`
+  `The HTTP request sends the field '{name}' with a hard-coded value. That value lives directly inside the .jmx file, so anyone who opens the test plan or checks it into version control can read the real credential. Passwords and tokens written into .jmx files are a common source of accidental leaks, especially when the file ends up in a CI log or a screenshot. Value redacted to **** — JMXAuditor never prints credential contents.`
 - **Suggestion:**
   `Move the actual value out of the .jmx. Typical options: load it from a CSV file at runtime (useful when each thread needs a different credential), read it from an environment variable using ${__env(NAME)} inside a User Defined Variables block, or fetch it from a secrets manager via a JSR223 PreProcessor. Then replace the hard-coded value here with a JMeter variable reference like ${PASSWORD}, so the test plan can be shared and reviewed without exposing the real secret.`
 - **Known false positives:** Test fixtures deliberately using throwaway credentials.
@@ -177,10 +177,10 @@ Maintainability (whole-tree first) — see CLAUDE.md for why.
 - **Detection logic:** Iterates `HeaderManager.getHeaders()`. Matches name (trimmed)
   case-insensitively against `"Authorization"`. Skips when value contains `${`.
   Strips a leading case-insensitive `"bearer "` prefix; fires when the remaining
-  trimmed value is non-empty. Value is redacted via `JAuditorLog.redact()` (invariant 9).
+  trimmed value is non-empty. Value is redacted via `JMXAuditorLog.redact()` (invariant 9).
 - **Title:** `Plaintext token in Authorization header`
 - **Description:**
-  `This Header Manager sends an Authorization header with a bearer token written directly into the .jmx file. Anyone who opens the test plan — teammates, reviewers, anyone with access to the source repository — can read the real token. Tokens committed into test plans have a habit of staying valid long after the author meant to rotate them, and they often end up leaking into screenshots, CI logs, or chat messages. Value redacted to **** — JAuditor never prints token contents.`
+  `This Header Manager sends an Authorization header with a bearer token written directly into the .jmx file. Anyone who opens the test plan — teammates, reviewers, anyone with access to the source repository — can read the real token. Tokens committed into test plans have a habit of staying valid long after the author meant to rotate them, and they often end up leaking into screenshots, CI logs, or chat messages. Value redacted to **** — JMXAuditor never prints token contents.`
 - **Suggestion:**
   `Take the token out of the .jmx and feed it in at runtime. The usual pattern: read an environment variable via ${__env(AUTH_TOKEN)} inside a User Defined Variables block, or load a line from a CSV file with a CSV Data Set Config element. Then change the header value here from the literal token to a variable reference like 'Bearer ${AUTH_TOKEN}'. The test runs exactly the same way, but the test plan no longer carries the secret with it.`
 - **Known false positives:** Public demo APIs with documented test tokens.
@@ -194,10 +194,10 @@ Maintainability (whole-tree first) — see CLAUDE.md for why.
   case-insensitively against the **substring** regex
   `.*(password|secret|token|apikey|api_key).*` — any name containing one of those
   tokens anywhere matches. Skips when value is blank or contains `${`. Value is
-  redacted via `JAuditorLog.redact()` (invariant 9).
+  redacted via `JMXAuditorLog.redact()` (invariant 9).
 - **Title:** `Credential literal in User Defined Variables`
 - **Description:**
-  `The User Defined Variable '{name}' has a name that looks like a credential (password, token, secret, apikey) and holds a hard-coded value. Because User Defined Variables live inside the .jmx, this value travels with the test plan everywhere it goes — into git, into screenshots, into CI job logs. That's almost never what the author intends. Value redacted to **** — JAuditor never prints credential contents.`
+  `The User Defined Variable '{name}' has a name that looks like a credential (password, token, secret, apikey) and holds a hard-coded value. Because User Defined Variables live inside the .jmx, this value travels with the test plan everywhere it goes — into git, into screenshots, into CI job logs. That's almost never what the author intends. Value redacted to **** — JMXAuditor never prints credential contents.`
 - **Suggestion:**
   `Replace the literal value with something that resolves at runtime. Common options: ${__env(VAR_NAME)} to read from an environment variable, ${__P(prop.name)} to read from a JMeter property passed on the command line (jmeter -Jprop.name=value ...), or a CSV Data Set Config if every row needs its own credential. The variable name can stay exactly the same, so the rest of the test plan doesn't need to change — only the stored value moves out of the .jmx.`
 - **Known false positives:** Variables whose names contain one of the credential

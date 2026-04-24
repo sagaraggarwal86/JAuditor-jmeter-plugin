@@ -25,7 +25,7 @@ jobs:
       - name: JAR size gate
         shell: bash
         run: |
-          jar=$(ls target/jauditor-jmeter-plugin-*.jar | grep -vE 'sources|javadoc|original' | head -n1)
+          jar=$(ls target/jmxauditor-jmeter-plugin-*.jar | grep -vE 'sources|javadoc|original' | head -n1)
           size=$(wc -c < "$jar")
           echo "JAR: $jar  size: $size bytes"
           test "$size" -lt 5242880

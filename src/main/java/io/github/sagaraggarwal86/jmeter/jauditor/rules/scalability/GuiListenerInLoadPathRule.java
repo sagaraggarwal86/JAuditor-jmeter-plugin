@@ -60,7 +60,7 @@ public final class GuiListenerInLoadPathRule extends AbstractRule {
         if (!GUI_HEAVY.contains(simple)) return List.of();
         return List.of(make(ctx.pathFor(node),
                 "GUI-heavy listener enabled on load path",
-                "Listener '" + simple + "' accumulates results in memory and is not safe for long or high-volume runs.",
-                "Disable in GUI-mode runs or replace with Simple Data Writer + offline analysis."));
+                "The '" + simple + "' listener keeps every sample it sees in memory so it can render them in real time. That's fine when you're debugging a few requests, but on a sustained load test it means the heap grows linearly with the sample count. After a few hundred thousand samples, JMeter either slows to a crawl garbage-collecting or runs out of memory and crashes outright — usually at exactly the worst moment, several hours into the test.",
+                "Two good fixes. For normal test runs, right-click the listener and disable it — results still go to the JTL file (if you have a Simple Data Writer present) and you can analyze them after the run. If you need a lightweight always-on writer, add a Simple Data Writer element pointing at a results.jtl file; it streams straight to disk without buffering in memory. Save the GUI-heavy listeners for quick smoke tests with a handful of samples, never for full-scale runs."));
     }
 }

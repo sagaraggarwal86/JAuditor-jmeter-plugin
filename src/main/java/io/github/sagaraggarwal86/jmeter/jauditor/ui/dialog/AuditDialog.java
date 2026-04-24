@@ -25,6 +25,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
@@ -35,7 +36,7 @@ public final class AuditDialog extends JDialog {
 
     private static final JAuditorLog LOG = JAuditorLog.forClass(AuditDialog.class);
     private static final DateTimeFormatter FILE_TS =
-            DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").withZone(java.time.ZoneId.systemDefault());
+            DateTimeFormatter.ofPattern("yyyyMMddHHmmss").withZone(java.time.ZoneId.systemDefault());
     private static final String CARD_TABLE = "TABLE";
     private static final String CARD_EMPTY = "EMPTY";
     private final HeaderBar header;
@@ -48,6 +49,7 @@ public final class AuditDialog extends JDialog {
     private final JLabel emptyMessage;
     private final CardLayout centerCards;
     private final JPanel centerPanel;
+    private final int originalTooltipDismissDelay;
     private DialogState state = DialogState.IDLE;
     private ScanWorker worker;
     private ScanResult lastResult;
@@ -56,7 +58,7 @@ public final class AuditDialog extends JDialog {
         super(owner, JAuditorPlugin.NAME, false);
         setMinimumSize(new Dimension(600, 400));
         Dimension size = JAuditorSession.get().dialogSize();
-        setSize(size != null ? size : new Dimension(900, 600));
+        setSize(size != null ? size : new Dimension(1000, 600));
         if (JAuditorSession.get().dialogLocation() != null) setLocation(JAuditorSession.get().dialogLocation());
         else setLocationRelativeTo(owner);
 
@@ -78,7 +80,9 @@ public final class AuditDialog extends JDialog {
         table.setTableHeader(null);
         table.setShowGrid(false);
         table.setToolTipText("Double-click or Enter to navigate to the element");
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.getColumnModel().getColumn(0).setCellRenderer(new FindingsTableRenderer());
+        table.getColumnModel().getColumn(0).setPreferredWidth(1200);
         model.addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
@@ -113,16 +117,20 @@ public final class AuditDialog extends JDialog {
 
         JScrollPane tableScroll = new JScrollPane(table);
         tableScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        tableScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         centerCards = new CardLayout();
         centerPanel = new JPanel(centerCards);
         centerPanel.add(tableScroll, CARD_TABLE);
         centerPanel.add(emptyMessage, CARD_EMPTY);
 
+        JPanel topRow = new JPanel(new BorderLayout());
+        topRow.add(kpi, BorderLayout.CENTER);
+        topRow.add(header, BorderLayout.EAST);
+
         JPanel top = new JPanel(new BorderLayout());
-        top.add(header, BorderLayout.NORTH);
+        top.add(topRow, BorderLayout.NORTH);
         JPanel mid = new JPanel(new BorderLayout());
-        mid.add(kpi, BorderLayout.NORTH);
-        mid.add(banner, BorderLayout.CENTER);
+        mid.add(banner, BorderLayout.NORTH);
         mid.add(tabs, BorderLayout.SOUTH);
         top.add(mid, BorderLayout.CENTER);
 
@@ -133,6 +141,8 @@ public final class AuditDialog extends JDialog {
 
         bindKeys();
         updateEmptyState();
+        originalTooltipDismissDelay = ToolTipManager.sharedInstance().getDismissDelay();
+        ToolTipManager.sharedInstance().setDismissDelay(60_000);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
@@ -140,6 +150,7 @@ public final class AuditDialog extends JDialog {
                 JAuditorSession.get().setDialogSize(getSize());
                 JAuditorSession.get().setDialogLocation(getLocation());
                 JAuditorSession.get().clearOnDialogClose();
+                ToolTipManager.sharedInstance().setDismissDelay(originalTooltipDismissDelay);
             }
         });
     }
@@ -154,6 +165,14 @@ public final class AuditDialog extends JDialog {
 
     private static String pluginVersion() {
         return io.github.sagaraggarwal86.jmeter.jauditor.JAuditorPlugin.version();
+    }
+
+    private void applyWindowTitle(String jmxName, boolean dirty) {
+        if (jmxName == null) {
+            setTitle(JAuditorPlugin.NAME);
+        } else {
+            setTitle(JAuditorPlugin.NAME + "-" + jmxName + (dirty ? " •" : ""));
+        }
     }
 
     public void startScan() {
@@ -171,7 +190,7 @@ public final class AuditDialog extends JDialog {
 
         String path = gp.getTestPlanFile();
         String name = (path == null) ? "untitled" : new File(path).getName();
-        header.setTitleText(name, dirty, path == null);
+        applyWindowTitle(path == null ? null : name, dirty);
 
         setState(DialogState.SCANNING);
         model.setFindings(java.util.List.of());
@@ -204,6 +223,7 @@ public final class AuditDialog extends JDialog {
             lastResult = r;
             JAuditorSession.get().setCurrentFindings(r);
             model.setFindings(r.findings());
+            updateColumnWidth(r.findings());
             tabs.updateCounts(model);
             kpi.update(r.findings());
             footer.setMetadata(Math.max(0, r.durationMs() / 1000L), r.nodesAnalyzed(), RuleRegistry.count());
@@ -225,6 +245,24 @@ public final class AuditDialog extends JDialog {
                     JAuditorPlugin.NAME, JOptionPane.ERROR_MESSAGE);
             setState(DialogState.IDLE);
         }
+    }
+
+    private void updateColumnWidth(java.util.List<Finding> findings) {
+        if (findings.isEmpty()) return;
+        Font base = UIManager.getFont("Label.font");
+        FontMetrics fm = getFontMetrics(base != null ? base : table.getFont());
+        int max = 400;
+        for (Finding f : findings) {
+            int titleW = fm.stringWidth("[" + f.category().name() + "] " + f.title());
+            int pathW = fm.stringWidth(f.nodePath().breadcrumb());
+            int sugW = (f.suggestion() != null) ? fm.stringWidth(f.suggestion()) : 0;
+            int rowMax = Math.max(Math.max(titleW, pathW), sugW);
+            if (rowMax > max) max = rowMax;
+        }
+        // stripe border (3) + text panel border (10 + 10) + small safety
+        max += 40;
+        table.getColumnModel().getColumn(0).setPreferredWidth(max);
+        table.revalidate();
     }
 
     private void setState(DialogState s) {
@@ -272,36 +310,50 @@ public final class AuditDialog extends JDialog {
     }
 
     private void onExportHtml() {
-        doExport("jauditor-report-", ".html",
+        File saved = doExport("jauditor-report-", ".html",
                 JAuditorSession.get()::lastHtmlExportDir,
                 JAuditorSession.get()::setLastHtmlExportDir,
                 out -> HtmlReportWriter.write(lastResult, pluginVersion(), out));
+        if (saved != null) openInDefaultApp(saved);
     }
 
     private void onExportJson() {
-        doExport("jauditor-findings-", ".json",
+        doExport("jauditor-report-", ".json",
                 JAuditorSession.get()::lastJsonExportDir,
                 JAuditorSession.get()::setLastJsonExportDir,
                 out -> JsonReportWriter.write(lastResult, pluginVersion(), out));
     }
 
-    private void doExport(String prefix, String ext,
+    private File doExport(String prefix, String ext,
                           java.util.function.Supplier<java.nio.file.Path> getLastDir,
                           java.util.function.Consumer<java.nio.file.Path> setLastDir,
                           ExportAction writer) {
-        if (lastResult == null) return;
+        if (lastResult == null) return null;
         JFileChooser fc = new JFileChooser();
-        fc.setSelectedFile(new File(prefix + baseName() + "-" + ts() + ext));
+        fc.setSelectedFile(new File(prefix + ts() + ext));
         if (getLastDir.get() != null) fc.setCurrentDirectory(getLastDir.get().toFile());
-        if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return null;
         File out = fc.getSelectedFile();
         try {
             writer.run(out.toPath());
             setLastDir.accept(out.getParentFile().toPath());
+            return out;
         } catch (Exception ex) {
             LOG.error("export failed", ex);
             JOptionPane.showMessageDialog(this, "Export failed. Check jmeter.log.",
                     JAuditorPlugin.NAME, JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+    }
+
+    private void openInDefaultApp(File file) {
+        if (!Desktop.isDesktopSupported()) return;
+        Desktop desktop = Desktop.getDesktop();
+        if (!desktop.isSupported(Desktop.Action.OPEN)) return;
+        try {
+            desktop.open(file);
+        } catch (IOException ex) {
+            LOG.warn("could not open report after save", ex);
         }
     }
 
@@ -385,13 +437,6 @@ public final class AuditDialog extends JDialog {
                 kpi.toggleCategory(c);
             }
         });
-    }
-
-    private String baseName() {
-        if (lastResult == null || lastResult.jmxFileName() == null) return "untitled";
-        String n = lastResult.jmxFileName();
-        int dot = n.lastIndexOf('.');
-        return (dot > 0) ? n.substring(0, dot) : n;
     }
 
     @FunctionalInterface

@@ -17,6 +17,7 @@ public final class FindingsTableRenderer implements TableCellRenderer {
         Color stripe = ThemeColors.forCategory(f.category());
         root.setBackground(isSelected ? UIManager.getColor("Table.selectionBackground") : UIManager.getColor("Table.background"));
         root.setBorder(BorderFactory.createMatteBorder(0, 3, 1, 0, stripe));
+        root.setToolTipText(buildTooltip(f));
 
         JPanel text = new JPanel();
         text.setOpaque(false);
@@ -32,13 +33,12 @@ public final class FindingsTableRenderer implements TableCellRenderer {
         text.add(title);
 
         JLabel path = new JLabel(f.nodePath().breadcrumb());
-        path.setFont(base.deriveFont(Font.PLAIN, Math.max(1f, base.getSize2D() - 1f)));
-        path.setToolTipText(f.nodePath().breadcrumb());
+        path.setFont(base.deriveFont(Font.PLAIN));
         text.add(path);
 
         if (f.suggestion() != null && !f.suggestion().isBlank()) {
             JLabel suggestion = new JLabel(f.suggestion());
-            suggestion.setFont(base.deriveFont(Font.ITALIC));
+            suggestion.setFont(base.deriveFont(Font.PLAIN));
             text.add(suggestion);
         }
 
@@ -46,5 +46,25 @@ public final class FindingsTableRenderer implements TableCellRenderer {
         root.setPreferredSize(new Dimension(400, 64));
         table.setRowHeight(row, 64);
         return root;
+    }
+
+    private static String buildTooltip(Finding f) {
+        StringBuilder sb = new StringBuilder(800);
+        sb.append("<html><body style='width:500px'>");
+        sb.append("<b>").append(esc(f.title())).append("</b><br><br>");
+        if (f.description() != null && !f.description().isBlank()) {
+            sb.append("<b>Description:</b><br>").append(esc(f.description())).append("<br><br>");
+        }
+        if (f.suggestion() != null && !f.suggestion().isBlank()) {
+            sb.append("<b>Suggestion:</b><br>").append(esc(f.suggestion())).append("<br><br>");
+        }
+        sb.append("<b>Path:</b> ").append(esc(f.nodePath().breadcrumb()));
+        sb.append("</body></html>");
+        return sb.toString();
+    }
+
+    private static String esc(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 }

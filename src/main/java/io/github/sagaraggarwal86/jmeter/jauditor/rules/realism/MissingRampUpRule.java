@@ -46,7 +46,7 @@ public final class MissingRampUpRule extends AbstractRule {
         if (threads <= 10 || ramp > 0) return List.of();
         return List.of(make(ctx.pathFor(node),
                 "Thread Group has no ramp-up",
-                "Starting " + threads + " threads instantly creates a thundering herd.",
-                "Set ramp-up to 1-10 seconds per 100 threads for a realistic warm-up."));
+                "This Thread Group starts " + threads + " virtual users all at exactly the same instant (ramp-up period is 0 seconds). That's a traffic spike no real system ever sees — connection pools fill in a single millisecond, caches haven't warmed up, the JIT compiler hasn't finished optimising hot paths. The first few seconds of results reflect a cold, overwhelmed system rather than steady-state behaviour, which skews every averaged metric for the rest of the run.",
+                "Set the Ramp-Up Period on the Thread Group to a non-zero value so JMeter introduces the threads gradually. A good rule of thumb is one to ten seconds per 100 threads — for example, 30-60 seconds for a 1000-thread group. Even for smaller runs, a 30-second ramp-up is usually enough to let connection pools, caches, and JIT compilation reach steady state before you start averaging the measurements that matter."));
     }
 }

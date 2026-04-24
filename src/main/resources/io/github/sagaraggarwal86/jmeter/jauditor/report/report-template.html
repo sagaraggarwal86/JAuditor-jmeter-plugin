@@ -2,64 +2,552 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{title}}</title>
-    <style>{
-    {
-        styles
-    }
-    }</style>
+    <style>/*STYLES*/</style>
 </head>
 <body>
-<header class="report-header">
-    <h1>JAuditor</h1>
-    <div class="meta">
-        <div><strong>File:</strong> {{jmxFileName}}</div>
-        <div><strong>Path:</strong> <code>{{jmxFilePath}}</code></div>
-        <div><strong>JMeter:</strong> {{jmeterVersion}}</div>
-        <div><strong>Scanned:</strong> {{scanTimestamp}}</div>
-        <div><strong>Plugin:</strong> v{{pluginVersion}}</div>
+<div class="rpt">
+    <div class="rpt-header">
+        <div class="header-left">
+            <h1 class="rpt-title">JAuditor &mdash; Static Analysis Report</h1>
+            <div class="meta-grid">
+                <span class="ml">Test Plan</span><span class="mv">{{jmxFileName}}</span>
+                <span class="ml">Scan Analysis Date</span><span class="mv">{{scanTimestamp}}</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button type="button" id="themeToggle" class="hdr-btn" onclick="toggleTheme()" aria-label="Toggle theme">&#x1F319;&nbsp;Dark Mode</button>
+            <button type="button" id="excelExport" class="hdr-btn exp-btn" onclick="exportExcel()" aria-label="Export to Excel">&#x1F4E5;&nbsp;Export Excel</button>
+        </div>
     </div>
-</header>
+    <div class="banner-zone">{{headerBanners}}</div>
+    <div class="body-row">
+        <nav class="sidebar" role="tablist" aria-label="Report sections">
+            {{navTabs}}
+        </nav>
+        <div class="main-col">
+            <div class="content-area">
+                {{panels}}
+            </div>
+        </div>
+    </div>
+</div>
 
-{{unsavedBanner}}
-{{truncationBanner}}
-
-<section class="summary">
-    {{categoryCards}}
-</section>
-
-<main>
-    {{findingsByCategory}}
-</main>
-
-{{ruleAppendix}}
-
-<footer class="report-footer">
-    <p>JAuditor v{{pluginVersion}} · {{scanTimestamp}} · <a
-            href="https://github.com/sagaraggarwal86/JAuditor-jmeter-plugin">github.com/sagaraggarwal86/JAuditor-jmeter-plugin</a>
-    </p>
-    <p class="muted">Static analysis — findings require human validation.</p>
-</footer>
-
+<script>/*XLSX*/</script>
 <script>
     (function () {
-        document.querySelectorAll('table.sortable th').forEach(function (th, idx) {
-            th.style.cursor = 'pointer';
-            th.addEventListener('click', function () {
-                var tbody = th.closest('table').querySelector('tbody');
-                var rows = Array.from(tbody.querySelectorAll('tr'));
-                var asc = th.dataset.sort !== 'asc';
-                rows.sort(function (a, b) {
-                    var at = a.children[idx].innerText.trim();
-                    var bt = b.children[idx].innerText.trim();
-                    return asc ? at.localeCompare(bt) : bt.localeCompare(at);
-                });
-                th.dataset.sort = asc ? 'asc' : 'desc';
-                rows.forEach(function (r) {
-                    tbody.appendChild(r);
-                });
+        var tabs = document.querySelectorAll('.sidebar .nav-item');
+        var panels = document.querySelectorAll('.content-area .panel');
+
+        function activate(targetId) {
+            tabs.forEach(function (t) {
+                var active = t.dataset.panel === targetId;
+                t.classList.toggle('active', active);
+                t.setAttribute('aria-selected', active ? 'true' : 'false');
+                t.tabIndex = active ? 0 : -1;
+            });
+            panels.forEach(function (p) {
+                p.classList.toggle('active', p.id === targetId);
+            });
+            if (history && history.replaceState) {
+                try { history.replaceState(null, '', '#' + targetId); } catch (e) { /* ignore */ }
+            }
+        }
+
+        tabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                activate(tab.dataset.panel);
+            });
+            tab.addEventListener('keydown', function (e) {
+                var arr = Array.prototype.slice.call(tabs);
+                var i = arr.indexOf(tab);
+                if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    var next = arr[(i + 1) % arr.length];
+                    next.focus();
+                    activate(next.dataset.panel);
+                } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    var prev = arr[(i - 1 + arr.length) % arr.length];
+                    prev.focus();
+                    activate(prev.dataset.panel);
+                }
             });
         });
+
+        // Clickable summary cards → navigate to category panel
+        document.querySelectorAll('.card-link').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var target = btn.dataset.panel;
+                if (!target) return;
+                activate(target);
+                var tab = document.getElementById('tab-' + target.replace(/^panel-/, ''));
+                if (tab) tab.focus();
+            });
+        });
+
+        // Group-by-rule expand/collapse
+        document.querySelectorAll('.grp-toggle').forEach(function (tog) {
+            tog.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var ruleId = tog.dataset.ruleId;
+                var table = tog.closest('table');
+                if (!table) return;
+                var expanded = tog.getAttribute('aria-expanded') === 'true';
+                tog.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+                table.querySelectorAll('tr.grp-member[data-rule-id="' + cssEscape(ruleId) + '"]').forEach(function (row) {
+                    if (expanded) {
+                        row.setAttribute('hidden', '');
+                    } else {
+                        row.removeAttribute('hidden');
+                    }
+                });
+                // refresh render to keep pagination consistent
+                var tableId = table.closest('.paginated-tbl').dataset.tableId;
+                if (tableId && window['refresh_' + tableId]) window['refresh_' + tableId]();
+            });
+        });
+
+        function cssEscape(s) {
+            if (window.CSS && CSS.escape) return CSS.escape(s);
+            return String(s).replace(/"/g, '\\"');
+        }
+
+        function initTable(tableId) {
+            var tbody = document.querySelector('[data-body-id="' + tableId + '"]');
+            var sel = document.querySelector('.row-limit[data-for="' + tableId + '"]');
+            var pager = document.querySelector('.pager[data-for="' + tableId + '"]');
+            var search = document.querySelector('.tbl-search[data-for="' + tableId + '"]');
+            var emptyEl = document.querySelector('.tbl-empty[data-for="' + tableId + '"]');
+            if (!tbody) return;
+            var table = tbody.closest('table');
+            var allRows = Array.prototype.slice.call(tbody.children).filter(function (r) {
+                return r.tagName === 'TR';
+            });
+            // Anchor rows = grp-head rows + non-member rows. grp-member rows follow their head.
+            var anchorRows = allRows.filter(function (r) { return !r.classList.contains('grp-member'); });
+            var page = 0;
+            var sortCol = -1, sortAsc = true;
+            var query = '';
+
+            function cellValue(row, idx) {
+                var c = row.children[idx];
+                if (!c) return '';
+                if (c.dataset && c.dataset.sort != null) return c.dataset.sort;
+                return (c.textContent || '').trim();
+            }
+
+            function matches(row) {
+                if (!query) return true;
+                if ((row.textContent || '').toLowerCase().indexOf(query) !== -1) return true;
+                if (row.classList.contains('grp-head')) {
+                    var ms = membersOf(row);
+                    for (var i = 0; i < ms.length; i++) {
+                        if ((ms[i].textContent || '').toLowerCase().indexOf(query) !== -1) return true;
+                    }
+                }
+                return false;
+            }
+
+            function membersOf(anchor) {
+                if (!anchor.classList.contains('grp-head')) return [];
+                var id = anchor.dataset.ruleId;
+                if (!id) return [];
+                return Array.prototype.slice.call(tbody.querySelectorAll('tr.grp-member[data-rule-id="' + cssEscape(id) + '"]'));
+            }
+
+            function render() {
+                var visibleAnchors = anchorRows.filter(matches);
+                var limit = sel ? parseInt(sel.value, 10) : visibleAnchors.length;
+                var total = visibleAnchors.length;
+                var pages = Math.max(1, Math.ceil(total / limit));
+                if (page >= pages) page = pages - 1;
+                if (page < 0) page = 0;
+                var start = page * limit;
+                var end = start + limit;
+
+                // hide all first
+                allRows.forEach(function (r) { r.style.display = 'none'; });
+
+                visibleAnchors.forEach(function (r, i) {
+                    if (i >= start && i < end) {
+                        r.style.display = '';
+                        membersOf(r).forEach(function (m) {
+                            if (!m.hasAttribute('hidden')) m.style.display = '';
+                        });
+                    }
+                });
+
+                if (pager) buildPager(pager, page, pages, tableId);
+
+                if (emptyEl) {
+                    if (total === 0) emptyEl.classList.add('visible');
+                    else emptyEl.classList.remove('visible');
+                }
+            }
+
+            if (table) {
+                var ths = table.querySelectorAll('thead th');
+                ths.forEach(function (th, idx) {
+                    if (!th.hasAttribute('tabindex')) th.setAttribute('tabindex', '0');
+                    th.setAttribute('role', 'columnheader');
+                    if (!th.hasAttribute('aria-sort')) th.setAttribute('aria-sort', 'none');
+
+                    function doSort() {
+                        if (sortCol === idx) {
+                            sortAsc = !sortAsc;
+                        } else {
+                            sortCol = idx;
+                            sortAsc = true;
+                        }
+                        ths.forEach(function (h) {
+                            h.setAttribute('aria-sort', 'none');
+                        });
+                        th.setAttribute('aria-sort', sortAsc ? 'ascending' : 'descending');
+
+                        anchorRows.sort(function (a, b) {
+                            var av = cellValue(a, idx);
+                            var bv = cellValue(b, idx);
+                            var an = parseFloat(av);
+                            var bn = parseFloat(bv);
+                            var numeric = !isNaN(an) && !isNaN(bn) && /^-?\d+(\.\d+)?$/.test(av) && /^-?\d+(\.\d+)?$/.test(bv);
+                            if (numeric) return sortAsc ? an - bn : bn - an;
+                            return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+                        });
+
+                        // Re-append anchors in sorted order, each followed by its members.
+                        anchorRows.forEach(function (r) {
+                            tbody.appendChild(r);
+                            membersOf(r).forEach(function (m) { tbody.appendChild(m); });
+                        });
+                        page = 0;
+                        render();
+                    }
+
+                    th.addEventListener('click', doSort);
+                    th.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            doSort();
+                        }
+                    });
+                });
+            }
+
+            if (sel) {
+                sel.addEventListener('change', function () {
+                    page = 0;
+                    render();
+                });
+            }
+
+            if (search) {
+                search.addEventListener('input', function () {
+                    query = (search.value || '').toLowerCase().trim();
+                    page = 0;
+                    render();
+                });
+            }
+
+            // Apply default sort if declared on the table.
+            if (table && table.dataset.defaultSort != null) {
+                var defIdx = parseInt(table.dataset.defaultSort, 10);
+                var defDir = table.dataset.defaultSortDir || 'asc';
+                var th = table.querySelectorAll('thead th')[defIdx];
+                if (th && !isNaN(defIdx)) {
+                    sortCol = defIdx;
+                    sortAsc = defDir !== 'desc';
+                    th.setAttribute('aria-sort', sortAsc ? 'ascending' : 'descending');
+                    anchorRows.sort(function (a, b) {
+                        var av = cellValue(a, defIdx);
+                        var bv = cellValue(b, defIdx);
+                        var an = parseFloat(av);
+                        var bn = parseFloat(bv);
+                        var numeric = !isNaN(an) && !isNaN(bn) && /^-?\d+(\.\d+)?$/.test(av) && /^-?\d+(\.\d+)?$/.test(bv);
+                        if (numeric) return sortAsc ? an - bn : bn - an;
+                        return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+                    });
+                    anchorRows.forEach(function (r) {
+                        tbody.appendChild(r);
+                        membersOf(r).forEach(function (m) { tbody.appendChild(m); });
+                    });
+                }
+            }
+
+            render();
+
+            window['goPage_' + tableId] = function (p) {
+                page = p;
+                render();
+            };
+            window['refresh_' + tableId] = render;
+        }
+
+        function buildPager(el, cur, total, tableId) {
+            if (total <= 1) {
+                el.innerHTML = '';
+                return;
+            }
+            var h = '';
+            h += '<button class="pg-btn" aria-label="Previous page"' + (cur === 0 ? ' disabled' : '') +
+                ' onclick="goPage_' + tableId + '(' + (cur - 1) + ')">&laquo;</button> ';
+            var start = Math.max(0, cur - 2), end = Math.min(total, start + 5);
+            if (end - start < 5) start = Math.max(0, end - 5);
+            for (var i = start; i < end; i++) {
+                h += '<button class="pg-btn' + (i === cur ? ' pg-active' : '') + '"' +
+                    (i === cur ? ' aria-current="page"' : '') +
+                    ' onclick="goPage_' + tableId + '(' + i + ')">' + (i + 1) + '</button> ';
+            }
+            h += '<button class="pg-btn" aria-label="Next page"' + (cur >= total - 1 ? ' disabled' : '') +
+                ' onclick="goPage_' + tableId + '(' + (cur + 1) + ')">&raquo;</button>';
+            h += ' <span class="pg-info">Page ' + (cur + 1) + ' of ' + total + '</span>';
+            el.innerHTML = h;
+        }
+
+        document.querySelectorAll('.paginated-tbl').forEach(function (wrap) {
+            var id = wrap.dataset.tableId;
+            if (id) initTable(id);
+        });
+
+        // Deep-link support: open the tab referenced in the URL fragment.
+        if (location.hash) {
+            var target = location.hash.substring(1);
+            if (document.getElementById(target)) {
+                activate(target);
+            }
+        }
+
+        /* ── Theme toggle (auto → dark → light → auto) ──────────── */
+        var themeStates = ['auto', 'dark', 'light'];
+        var themeLabels = {
+            auto: '🌙 Dark Mode',
+            dark: '☀️ Light Mode',
+            light: '🔄 Auto'
+        };
+        var themeIdx = 0;
+        window.toggleTheme = function () {
+            themeIdx = (themeIdx + 1) % themeStates.length;
+            var theme = themeStates[themeIdx];
+            if (theme === 'auto') {
+                document.documentElement.removeAttribute('data-theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', theme);
+            }
+            var btn = document.getElementById('themeToggle');
+            if (btn) btn.innerHTML = themeLabels[theme];
+        };
+        var initThemeBtn = document.getElementById('themeToggle');
+        if (initThemeBtn) initThemeBtn.innerHTML = themeLabels.auto;
+
+        /* ── Excel export (styled via xlsx-js-style) ────────────── */
+        var HDR = {
+            font: {bold: true, color: {rgb: 'FFFFFF'}, sz: 11},
+            fill: {fgColor: {rgb: '2D3748'}},
+            alignment: {horizontal: 'center', vertical: 'center'},
+            border: {
+                top: {style: 'thin', color: {rgb: 'A0AEC0'}},
+                bottom: {style: 'thin', color: {rgb: 'A0AEC0'}},
+                left: {style: 'thin', color: {rgb: 'A0AEC0'}},
+                right: {style: 'thin', color: {rgb: 'A0AEC0'}}
+            }
+        };
+        var CELL_BORDER = {
+            top: {style: 'thin', color: {rgb: 'E2E8F0'}},
+            bottom: {style: 'thin', color: {rgb: 'E2E8F0'}},
+            left: {style: 'thin', color: {rgb: 'E2E8F0'}},
+            right: {style: 'thin', color: {rgb: 'E2E8F0'}}
+        };
+        var SEV_HIGH = {
+            font: {color: {rgb: 'C53030'}, bold: true},
+            fill: {fgColor: {rgb: 'FFF5F5'}},
+            border: CELL_BORDER,
+            alignment: {horizontal: 'center'}
+        };
+        var SEV_MED = {
+            font: {color: {rgb: 'B7791F'}, bold: true},
+            fill: {fgColor: {rgb: 'FFFFF0'}},
+            border: CELL_BORDER,
+            alignment: {horizontal: 'center'}
+        };
+        var SEV_LOW = {
+            font: {color: {rgb: '2C5282'}, bold: true},
+            fill: {fgColor: {rgb: 'EBF8FF'}},
+            border: CELL_BORDER,
+            alignment: {horizontal: 'center'}
+        };
+        var CELL_DEFAULT = {border: CELL_BORDER, alignment: {vertical: 'center', wrapText: true}};
+        var CELL_CODE = {
+            border: CELL_BORDER,
+            font: {name: 'Consolas'},
+            alignment: {vertical: 'center'}
+        };
+        var INFO_KEY = {font: {bold: true, sz: 11}, alignment: {vertical: 'center'}};
+        var INFO_VAL = {alignment: {vertical: 'center'}};
+
+        function severityStyleFor(text) {
+            var t = (text || '').trim().toLowerCase();
+            if (t === 'high') return SEV_HIGH;
+            if (t === 'medium') return SEV_MED;
+            if (t === 'low') return SEV_LOW;
+            return null;
+        }
+
+        function styleHeaderRow(ws, colCount) {
+            for (var c = 0; c < colCount; c++) {
+                var addr = XLSX.utils.encode_cell({r: 0, c: c});
+                if (ws[addr]) ws[addr].s = HDR;
+            }
+        }
+
+        function styleDataRows(ws, table, severityCol, codeCols) {
+            var rows = table.querySelectorAll('tbody tr');
+            var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+            var colCount = range.e.c + 1;
+            rows.forEach(function (tr, ri) {
+                var r = ri + 1;
+                var tds = tr.querySelectorAll('td');
+                for (var c = 0; c < colCount && c < tds.length; c++) {
+                    var addr = XLSX.utils.encode_cell({r: r, c: c});
+                    if (!ws[addr]) continue;
+                    if (severityCol != null && c === severityCol) {
+                        var sev = severityStyleFor(tds[c].textContent);
+                        ws[addr].s = sev || CELL_DEFAULT;
+                    } else if (codeCols && codeCols.indexOf(c) >= 0) {
+                        ws[addr].s = CELL_CODE;
+                    } else {
+                        ws[addr].s = CELL_DEFAULT;
+                    }
+                }
+            });
+        }
+
+        function autoColWidths(ws) {
+            var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+            var cols = [];
+            for (var c = range.s.c; c <= range.e.c; c++) {
+                var max = 10;
+                for (var r = range.s.r; r <= range.e.r; r++) {
+                    var cell = ws[XLSX.utils.encode_cell({r: r, c: c})];
+                    if (cell && cell.v != null) {
+                        var len = String(cell.v).length;
+                        if (len > max) max = len;
+                    }
+                }
+                cols.push({wch: Math.min(max + 2, 80)});
+            }
+            ws['!cols'] = cols;
+        }
+
+        function withAllRowsVisible(fn) {
+            // Temporarily un-hide pagination-hidden rows and grp-member rows + open <details>
+            var hidden = [];
+            document.querySelectorAll('tbody tr').forEach(function (tr) {
+                if (tr.style.display === 'none') {
+                    tr.style.display = '';
+                    hidden.push({el: tr, prop: 'display'});
+                }
+                if (tr.hasAttribute('hidden')) {
+                    tr.removeAttribute('hidden');
+                    hidden.push({el: tr, prop: 'hidden'});
+                }
+            });
+            var openedDetails = [];
+            document.querySelectorAll('details').forEach(function (d) {
+                if (!d.open) {
+                    d.open = true;
+                    openedDetails.push(d);
+                }
+            });
+            try {
+                fn();
+            } finally {
+                hidden.forEach(function (h) {
+                    if (h.prop === 'display') h.el.style.display = 'none';
+                    else h.el.setAttribute('hidden', '');
+                });
+                openedDetails.forEach(function (d) { d.open = false; });
+            }
+        }
+
+        function sheetNameFromPanel(panel) {
+            var h2 = panel.querySelector('h2');
+            var name = h2 ? (h2.childNodes[0].textContent || '').trim() : 'Sheet';
+            return name.replace(/[\\/\?\*\[\]:]/g, '').substring(0, 31) || 'Sheet';
+        }
+
+        function exportExcel() {
+            if (typeof XLSX === 'undefined') {
+                alert('Excel export is unavailable. The SheetJS library could not be loaded.');
+                return;
+            }
+            try {
+                var wb = XLSX.utils.book_new();
+
+                // Test Info sheet
+                var infoRows = [['Field', 'Value']];
+                var testPlan = document.querySelector('.meta-grid .mv');
+                var scanned = document.querySelectorAll('.meta-grid .mv')[1];
+                if (testPlan) infoRows.push(['Test Plan', testPlan.textContent.trim()]);
+                if (scanned) infoRows.push(['Scan Analysis Date', scanned.textContent.trim()]);
+                var wsInfo = XLSX.utils.aoa_to_sheet(infoRows);
+                wsInfo['!cols'] = [{wch: 24}, {wch: 60}];
+                styleHeaderRow(wsInfo, 2);
+                for (var i = 1; i < infoRows.length; i++) {
+                    var kA = XLSX.utils.encode_cell({r: i, c: 0});
+                    var vA = XLSX.utils.encode_cell({r: i, c: 1});
+                    if (wsInfo[kA]) wsInfo[kA].s = INFO_KEY;
+                    if (wsInfo[vA]) wsInfo[vA].s = INFO_VAL;
+                }
+                XLSX.utils.book_append_sheet(wb, wsInfo, 'Test Info');
+
+                withAllRowsVisible(function () {
+                    // Rule reference sheet (from Summary panel's <details> table)
+                    var rulesTable = document.querySelector('table.rules');
+                    if (rulesTable) {
+                        var wsRules = XLSX.utils.table_to_sheet(rulesTable, {raw: false});
+                        styleHeaderRow(wsRules, rulesTable.querySelectorAll('thead th').length);
+                        styleDataRows(wsRules, rulesTable, 2, [0]);
+                        autoColWidths(wsRules);
+                        XLSX.utils.book_append_sheet(wb, wsRules, 'Rule Reference');
+                    }
+
+                    // One sheet per category panel with findings
+                    document.querySelectorAll('.panel[id^="panel-"]').forEach(function (panel) {
+                        if (panel.id === 'panel-summary') return;
+                        var table = panel.querySelector('table.findings');
+                        if (!table) return;
+                        var ws = XLSX.utils.table_to_sheet(table, {raw: false});
+                        var colCount = table.querySelectorAll('thead th').length;
+                        styleHeaderRow(ws, colCount);
+                        styleDataRows(ws, table, 0, [1, colCount - 1]); // severity col 0, rule-id col 1, node-path last
+                        autoColWidths(ws);
+                        XLSX.utils.book_append_sheet(wb, ws, sheetNameFromPanel(panel));
+                    });
+                });
+
+                if (wb.SheetNames.length <= 1) {
+                    // Only Test Info — still write a Findings sheet with a stub
+                    var wsEmpty = XLSX.utils.aoa_to_sheet([['No findings']]);
+                    wsEmpty['!cols'] = [{wch: 40}];
+                    XLSX.utils.book_append_sheet(wb, wsEmpty, 'Findings');
+                }
+
+                var ts = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
+                XLSX.writeFile(wb, 'jauditor-report-' + ts + '.xlsx');
+            } catch (e) {
+                alert('Excel export failed: ' + (e && e.message ? e.message : e));
+            }
+        }
+        window.exportExcel = exportExcel;
+
+        if (typeof XLSX === 'undefined') {
+            var excelBtn = document.getElementById('excelExport');
+            if (excelBtn) {
+                excelBtn.disabled = true;
+                excelBtn.title = 'Excel export unavailable (SheetJS library not loaded)';
+            }
+        }
     })();
 </script>
 </body>

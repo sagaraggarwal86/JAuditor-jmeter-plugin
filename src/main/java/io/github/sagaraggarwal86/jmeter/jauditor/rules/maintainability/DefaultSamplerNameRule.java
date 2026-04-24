@@ -52,7 +52,7 @@ public final class DefaultSamplerNameRule extends AbstractRule {
         if (!DEFAULTS.contains(name.trim())) return List.of();
         return List.of(make(ctx.pathFor(node),
                 "Sampler uses default name",
-                "Sampler '" + name + "' has not been renamed.",
-                "Rename it to describe the business action (e.g., 'POST /checkout')."));
+                "This sampler still carries JMeter's default name, '" + name + "'. In the results table, Aggregate Report, and every summary graph, that default name labels every measurement. When the test plan has several samplers all called 'HTTP Request' (or any other default), you can't tell which one is spiking, which one is slow, or which one is failing — the labels are indistinguishable.",
+                "Rename the sampler to something that describes the business action it represents, ideally method plus endpoint or an operation name — for example, 'POST /checkout', 'GET product detail', or 'Login — fetch CSRF token'. The new name flows through automatically to every report and listener, so after the rename the metrics become immediately readable. A good test of a name: if a colleague sees it in a results table without context, can they tell what the request does?"));
     }
 }

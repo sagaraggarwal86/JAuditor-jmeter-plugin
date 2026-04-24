@@ -16,9 +16,9 @@ public final class SeverityTabs extends JPanel {
     public SeverityTabs() {
         setLayout(new FlowLayout(FlowLayout.LEFT, 4, 4));
         all = new JToggleButton("All (0)", true);
-        error = new JToggleButton("Error (0)");
-        warn = new JToggleButton("Warn (0)");
-        info = new JToggleButton("Info (0)");
+        error = new JToggleButton("High (0)");
+        warn = new JToggleButton("Medium (0)");
+        info = new JToggleButton("Low (0)");
         ButtonGroup g = new ButtonGroup();
         g.add(all);
         g.add(error);
@@ -53,8 +53,8 @@ public final class SeverityTabs extends JPanel {
 
     public void updateCounts(FindingsTableModel model) {
         all.setText("All (" + model.countAll() + ")");
-        error.setText("Error (" + model.countSeverity(Severity.ERROR) + ")");
-        warn.setText("Warn (" + model.countSeverity(Severity.WARN) + ")");
-        info.setText("Info (" + model.countSeverity(Severity.INFO) + ")");
+        error.setText("High (" + model.countSeverity(Severity.ERROR) + ")");
+        warn.setText("Medium (" + model.countSeverity(Severity.WARN) + ")");
+        info.setText("Low (" + model.countSeverity(Severity.INFO) + ")");
     }
 }

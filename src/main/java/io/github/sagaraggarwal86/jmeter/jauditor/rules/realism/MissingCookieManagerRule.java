@@ -50,7 +50,7 @@ public final class MissingCookieManagerRule extends AbstractRule {
         if (hasCookie) return List.of();
         return List.of(make(ctx.pathFor(node),
                 "No HTTP Cookie Manager",
-                "Test plan has HTTP samplers but no Cookie Manager. Session-based apps won't authenticate correctly.",
-                "Add an HTTP Cookie Manager at the Test Plan or Thread Group level."));
+                "The test plan makes HTTP requests but has no HTTP Cookie Manager anywhere in the tree. That means JMeter doesn't store cookies between requests — every sampler acts like a brand-new browser that's never been to the site before. If the application relies on session cookies for login, shopping carts, CSRF tokens, or sticky load-balancer routing, the test isn't actually exercising real user flows; it's exercising a series of unauthenticated first-visits.",
+                "Add an HTTP Cookie Manager element to the test tree. Putting it directly under the Test Plan makes it apply to every Thread Group; putting it inside a specific Thread Group scopes it to that group only. The default settings (clear cookies each iteration = true, CookieManager.save.cookies = false) work for most cases — JMeter will accept, store, and replay cookies across a single thread's iterations, which is how a real browser behaves."));
     }
 }

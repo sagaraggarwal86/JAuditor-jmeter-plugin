@@ -51,7 +51,7 @@ public final class HardcodedHostRule extends AbstractRule {
         if (!HOSTISH.matcher(host).matches()) return List.of();
         return List.of(make(ctx.pathFor(node),
                 "Hard-coded hostname",
-                "Host '" + host + "' is a literal. Moving between environments requires editing the .jmx.",
-                "Replace with ${HOST} backed by a User Defined Variable or property."));
+                "The Server Name field is set to '" + host + "' — a literal hostname written directly into the test plan. That ties this test to one specific environment. Anyone who wants to run the same test against dev, staging, or a branch deployment has to hand-edit the .jmx, which either means maintaining multiple copies of the file (drift hazard) or remembering to change it back before committing (leakage hazard).",
+                "Replace the hard-coded hostname with a variable reference like ${HOST}. Define the variable either in a User Defined Variables block at the top of the test plan (easy to change per run from the GUI), or via a JMeter property passed on the command line (jmeter -JHOST=staging.example.com ...) so the same .jmx works across every environment without modification. For a multi-environment team, command-line properties are usually cleanest — the .jmx stays identical and the environment is picked at launch time."));
     }
 }

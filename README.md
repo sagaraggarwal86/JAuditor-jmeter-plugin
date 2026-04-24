@@ -22,8 +22,8 @@ Requirements: JMeter 5.6.3, Java 17+.
 ## 2. Quick start
 
 Open a `.jmx`, press **Ctrl+Shift+A** (Cmd+Shift+A on macOS), review findings, and double-click (or select and press
-Enter) any finding to jump to the offending element. Filter by severity via the tabs or press **1**–**4** (All, Error,
-Warn, Info); click any of the six category cards to toggle that category in or out of the view, or use **Alt+1**–
+Enter) any finding to jump to the offending element. Filter by severity via the tabs or press **1**–**4** (All, High,
+Medium, Low); click any of the six category buttons to toggle that category in or out of the view, or use **Alt+1**–
 **Alt+6** from the keyboard. **F5** or **Ctrl+R** rescans; **Esc** closes the dialog.
 
 Export:

@@ -59,7 +59,7 @@ public final class HttpSamplerNoAssertionRule extends AbstractRule {
         }
         return List.of(make(ctx.pathFor(node),
                 "HTTP Sampler has no Response Assertion",
-                "Sampler has no Response Assertion in scope. HTTP 200 with an error body will be counted as success.",
-                "Add a Response Assertion on status code or response content — or rely on a parent-scope assertion."));
+                "This HTTP sampler has no Response Assertion attached to it or inherited from any ancestor. JMeter's default definition of 'success' is just 'the connection completed and the HTTP status code was under 400' — so a 200 response containing an actual error page, an empty body, a captcha, or a maintenance message all count as passing samples. Error rate graphs stay green while the system under test is in fact completely broken.",
+                "Add a Response Assertion as a child of the sampler, or on an ancestor (Thread Group, Transaction Controller) so it applies to multiple samplers at once. A minimal useful check asserts that the response code equals 200, or that the response text contains a string you expect on success ('Welcome', 'orderId', etc.). Even one such check makes the error rate trustworthy. For APIs, asserting on a JSON field via a JSON Assertion is usually stronger than a status-code-only check."));
     }
 }

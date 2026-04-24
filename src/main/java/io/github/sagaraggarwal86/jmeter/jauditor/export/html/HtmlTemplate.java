@@ -15,7 +15,8 @@ public final class HtmlTemplate {
     public static String render(Map<String, String> tokens) throws IOException {
         String tpl = loadResource(BASE + "report-template.html");
         String css = loadResource(BASE + "report-styles.css");
-        String out = tpl.replace("{{styles}}", css);
+        String xlsx = loadResource(BASE + "xlsx-style.bundle.js");
+        String out = tpl.replace("/*STYLES*/", css).replace("/*XLSX*/", xlsx);
         for (Map.Entry<String, String> e : tokens.entrySet()) {
             out = out.replace("{{" + e.getKey() + "}}", e.getValue() == null ? "" : e.getValue());
         }

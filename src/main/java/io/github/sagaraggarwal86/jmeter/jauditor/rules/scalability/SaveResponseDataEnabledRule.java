@@ -45,7 +45,7 @@ public final class SaveResponseDataEnabledRule extends AbstractRule {
         if (!save) return List.of();
         return List.of(make(ctx.pathFor(node),
                 "Save Response Data enabled",
-                "Saving full response bodies inflates JTL size and can blow out heap under load.",
-                "Disable response saving on the load path; enable only for diagnostic runs."));
+                "This HTTP sampler is configured to save the full response body for every request into the results file. On a serious load test at thousands of requests per second, each potentially hundreds of kilobytes in size, the JTL file grows by gigabytes per minute, and JMeter buffers chunks of that in memory along the way. Disk fills up, heap pressure spikes, and the extra I/O slows the actual test down to where the reported response times aren't even representative of the system under test anymore.",
+                "Turn off the save-response-data option on the sampler unless you specifically need the body for later inspection. If you only need bodies for failed requests (a reasonable debugging compromise), configure that via the jmeter.save.saveservice.response_data.on_error property in jmeter.properties — JMeter will then save bodies only when a sample fails. For full-body captures, run a targeted smoke test with a handful of iterations rather than saving every response on a 10,000-thread run."));
     }
 }

@@ -50,8 +50,8 @@ public final class ExtractorNoReferenceNameRule extends AbstractRule {
         if (v == null || v.isBlank()) {
             return List.of(make(ctx.pathFor(node),
                     "Extractor missing reference name",
-                    "Extractor has no reference name. Extracted value will not be accessible as a variable.",
-                    "Set a reference name matching the intended JMeter variable."));
+                    "This extractor runs its extraction logic but has no reference name set, so whatever it pulls out of the response goes nowhere — there's no JMeter variable for later samplers, assertions, or scripts to read it from. Effectively the extractor is doing work that produces no usable output, and any downstream element that was expecting a variable will see it as undefined.",
+                    "Set the Reference Name field on the extractor to the variable name you want to use downstream — for example, authToken if a later sampler needs ${authToken} in its header. Pick a name that makes the value's purpose obvious at a glance, and make sure it matches exactly what the rest of the test plan references (JMeter variable names are case-sensitive)."));
         }
         return List.of();
     }

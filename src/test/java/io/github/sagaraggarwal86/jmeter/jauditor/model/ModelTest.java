@@ -1,5 +1,6 @@
 package io.github.sagaraggarwal86.jmeter.jauditor.model;
 
+import io.github.sagaraggarwal86.jmeter.jauditor.engine.ScanLimits;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -26,8 +27,11 @@ class ModelTest {
     @Test
     void scanOutcomeBanner() {
         assertThat(ScanOutcome.COMPLETE.isTruncated()).isFalse();
-        assertThat(ScanOutcome.NODE_LIMIT.bannerMessage(12345)).contains("12345");
+        assertThat(ScanOutcome.NODE_LIMIT.bannerMessage(0))
+                .contains(String.valueOf(ScanLimits.MAX_NODES));
         assertThat(ScanOutcome.TIMEOUT.isTruncated()).isTrue();
+        assertThat(ScanOutcome.FINDING_LIMIT.bannerMessage(0))
+                .contains(String.valueOf(ScanLimits.MAX_FINDINGS));
     }
 
     @Test

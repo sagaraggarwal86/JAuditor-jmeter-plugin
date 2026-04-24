@@ -75,7 +75,7 @@ or email, pick a theme explicitly to avoid reader-local variation.
   are logged and JMeter continues.
 - **"Open a test plan first to audit it."** Load a `.jmx` before clicking Audit.
 - **"This element no longer exists. Rescan."** The tree changed between scan and click. Click Rescan.
-- **Partial results banner.** Scan hit the 10 s / 10 000 node / 500 finding cap. Narrow the tree or split the plan.
+- **Partial results banner.** Scan hit the 10 s / 10 000 node / 2000 finding cap. Narrow the tree or split the plan.
 
 ## 8. Contributing
 

@@ -10,8 +10,8 @@ import java.util.Locale;
 public enum ScanOutcome {
     COMPLETE(null),
     TIMEOUT("Scan exceeded 10s. Partial results shown."),
-    NODE_LIMIT("Scanned first 10,000 of %d nodes."),
-    FINDING_LIMIT("First 500 of %d findings shown."),
+    NODE_LIMIT("Scan reached 10000-node cap. Partial results shown."),
+    FINDING_LIMIT("Scan reached 2000-finding cap. Partial results shown."),
     CANCELLED(null);
 
     private final String bannerTemplate;

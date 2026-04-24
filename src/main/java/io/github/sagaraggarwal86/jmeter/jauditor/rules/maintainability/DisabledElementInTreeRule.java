@@ -45,7 +45,7 @@ public final class DisabledElementInTreeRule extends AbstractRule {
         if (node.getParent() == null) return List.of();
         return List.of(make(ctx.pathFor(node),
                 "Disabled element in tree",
-                "Element '" + node.getName() + "' is disabled but remains in the test plan.",
-                "Remove dead branches, or add a comment explaining why it's retained."));
+                "The element '" + node.getName() + "' is disabled — it still exists in the test tree and gets saved into the .jmx file, but it doesn't execute during test runs. Over time, disabled elements pile up: an experiment someone tried once, a listener left over from debugging, a branch commented out 'temporarily' months ago. They confuse anyone reading the test plan later because it's hard to tell whether a disabled element is intentionally paused or forgotten junk.",
+                "If the element is genuinely no longer needed, delete it — .jmx files are in version control, so if you ever want it back it's one git log away. If you're keeping it for a specific reason (a debug listener you re-enable when investigating something, an alternative flow that might come back), add a Comment on the element (right-click → Edit Comment) explaining why it's there and what it's for, so the next person understands at a glance."));
     }
 }

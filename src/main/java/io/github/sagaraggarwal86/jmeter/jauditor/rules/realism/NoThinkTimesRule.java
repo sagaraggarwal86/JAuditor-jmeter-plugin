@@ -46,7 +46,7 @@ public final class NoThinkTimesRule extends AbstractRule {
         if (ctx.hasDescendantOfType(node, Timer.class)) return List.of();
         return List.of(make(ctx.pathFor(node),
                 "Thread Group has no think times",
-                "Samplers fire back-to-back with no Timer. Users don't behave that way.",
-                "Add a Constant Timer or Gaussian Random Timer to simulate realistic pacing."));
+                "This Thread Group runs its requests one right after another with nothing slowing them down. Real users pause between actions — they read the page, scroll, type, decide — so a load test without pauses hits the server much faster and harder than production traffic ever would, and the response times and error rates you get back won't reflect what real users experience.",
+                "Add a Timer element somewhere inside this Thread Group so JMeter pauses between requests. A Constant Timer gives every thread the same fixed delay (e.g., 2 seconds) — quick to set up. A Gaussian Random Timer varies the delay around a target average ('about 3 seconds, give or take one') — more realistic. Even a few seconds of pause per action usually makes the load shape look much closer to real traffic."));
     }
 }

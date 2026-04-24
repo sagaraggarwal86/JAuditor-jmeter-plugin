@@ -57,7 +57,7 @@ public final class MissingTransactionControllerRule extends AbstractRule {
         // We still fire — the issue is the loose samplers, not absence of any TC anywhere.
         return List.of(make(ctx.pathFor(node),
                 "Samplers outside Transaction Controllers",
-                loose.size() + " sampler(s) at the Thread Group level are not wrapped in Transaction Controllers.",
-                "Wrap related samplers in a Transaction Controller with a business-meaningful name."));
+                "This Thread Group has " + loose.size() + " sampler(s) as direct children with no Transaction Controller grouping them. Each sampler shows up as its own row in aggregate reports, which means the per-business-action view of the test has to be reconstructed by hand. A realistic flow like 'checkout' might touch six samplers (load cart, validate promo, submit payment, confirm, etc.); without a Transaction Controller you get six separate rows instead of one 'Checkout' row with a clean end-to-end duration.",
+                "Group related samplers under a Transaction Controller named for the business flow they represent — 'Checkout', 'User Login', 'Search Product'. In reports, the controller shows up as a single row with its total duration (time from the first sampler starting to the last one finishing), alongside the individual sampler rows. Turn on 'Generate Parent Sample' on the controller if you want only the grouped row in the summary; leave it off if you want both the grouped row and the individual ones."));
     }
 }

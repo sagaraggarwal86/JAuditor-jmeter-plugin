@@ -8,7 +8,13 @@
       "PowerShell(mvn clean *)",
       "PowerShell(Get-Item *)",
       "PowerShell(Get-Item target\\\\jauditor-jmeter-plugin-0.1.0.jar | Select-Object Name, @{Name='KB';Expression={[math]::Round\\($_.Length / 1KB, 1\\)}})",
-      "PowerShell(mvn verify *)"
+      "PowerShell(mvn verify *)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(git diff --stat HEAD -- src/main/java src/main/resources | Select-Object -Last 20)",
+      "PowerShell(Get-ChildItem target/jauditor-jmeter-plugin-0.1.0.jar | Select-Object Name, @{N='SizeKB';E={[math]::Round\\($_.Length/1KB,1\\)}})",
+      "PowerShell(Get-Item \"F:/Projects/BPM-jmeter-plugin/src/main/resources/xlsx-style.bundle.js\",\"F:/Projects/BPM-jmeter-plugin/src/main/resources/chart.umd.min.js\",\"F:/Projects/BPM-jmeter-plugin/src/main/resources/bpm-report.js\",\"F:/Projects/BPM-jmeter-plugin/src/main/resources/bpm-report.css\" | Select-Object Name, @{N='KB';E={[math]::Round\\($_.Length/1KB,0\\)}})",
+      "PowerShell(Copy-Item *)",
+      "PowerShell(if \\(Test-Path \"F:/Projects/JAuditor-jmeter-plugin/src/main/resources/io/github/sagaraggarwal86/jmeter/jauditor/report/xlsx-style.bundle.js\"\\) { \\(Get-Item \"F:/Projects/JAuditor-jmeter-plugin/src/main/resources/io/github/sagaraggarwal86/jmeter/jauditor/report/xlsx-style.bundle.js\"\\).Length } else { \"MISSING\" })"
     ]
   }
 }

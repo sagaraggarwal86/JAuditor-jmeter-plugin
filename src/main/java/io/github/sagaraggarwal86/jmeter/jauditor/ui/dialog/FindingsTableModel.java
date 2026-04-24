@@ -5,11 +5,7 @@ import io.github.sagaraggarwal86.jmeter.jauditor.model.Finding;
 import io.github.sagaraggarwal86.jmeter.jauditor.model.Severity;
 
 import javax.swing.table.AbstractTableModel;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public final class FindingsTableModel extends AbstractTableModel {
 

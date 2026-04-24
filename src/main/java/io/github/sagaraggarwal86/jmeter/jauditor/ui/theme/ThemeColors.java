@@ -37,4 +37,8 @@ public final class ThemeColors {
     public static String cssHexLight(Category c) {
         return String.format("#%06X", LIGHT.get(c).getRGB() & 0xFFFFFF);
     }
+
+    public static String cssHexDark(Category c) {
+        return String.format("#%06X", DARK.get(c).getRGB() & 0xFFFFFF);
+    }
 }

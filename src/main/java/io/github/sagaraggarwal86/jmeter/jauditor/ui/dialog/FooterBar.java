@@ -29,7 +29,8 @@ public final class FooterBar extends JPanel {
     }
 
     public void setMetadata(long secondsAgo, int nodes, int rules) {
-        left.setText("Last scan: " + secondsAgo + "s ago · " + nodes + " nodes analyzed · " + rules + " rules");
+        left.setText("<html>Last scan: " + secondsAgo + "s ago · " + nodes + " nodes analyzed · "
+                + rules + " rules · <i>Tip: Export HTML for detailed findings</i></html>");
     }
 
     public void setHiddenCount(int n) {

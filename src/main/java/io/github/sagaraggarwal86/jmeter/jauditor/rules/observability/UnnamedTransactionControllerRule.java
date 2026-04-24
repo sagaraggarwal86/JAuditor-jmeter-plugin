@@ -45,7 +45,7 @@ public final class UnnamedTransactionControllerRule extends AbstractRule {
         if (!"Transaction Controller".equals(name.trim())) return List.of();
         return List.of(make(ctx.pathFor(node),
                 "Transaction Controller unnamed",
-                "Transaction Controller uses the default name, producing unreadable report labels.",
-                "Rename to a business-meaningful action (e.g., 'Checkout Flow')."));
+                "This Transaction Controller is still named 'Transaction Controller' — the default. In aggregated results the controller appears as a row with exactly that label, and if the test has more than one such controller (which is common), every row reads 'Transaction Controller' with no way to tell them apart. The grouped metrics the controller is there to produce become unreadable.",
+                "Rename the controller to describe the business flow it wraps: 'Checkout Flow', 'User Registration', 'Search And Filter'. The name shows up verbatim in every report, so pick something that reads naturally when a stakeholder skims the summary. If several controllers represent variants of the same flow (e.g., guest vs logged-in checkout), include the variant in the name so they sort together and stay distinguishable."));
     }
 }

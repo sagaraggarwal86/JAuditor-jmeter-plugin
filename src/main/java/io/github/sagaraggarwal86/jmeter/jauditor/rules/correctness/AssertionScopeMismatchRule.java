@@ -55,8 +55,8 @@ public final class AssertionScopeMismatchRule extends AbstractRule {
             if (embedded) {
                 return List.of(make(ctx.pathFor(node),
                         "Assertion scope may miss sub-samples",
-                        "Response Assertion uses default/main-sample scope on a sampler that generates sub-samples (embedded resources).",
-                        "Set assertion scope to 'Main sample and sub-samples' if sub-sample validation is required."));
+                        "This Response Assertion is set to check only the main sample, but its parent HTTP sampler has 'Retrieve All Embedded Resources' turned on — which means every image, CSS file, and JS file the page pulls in becomes its own sub-sample. If any of those sub-samples fails (a broken image, a 404 on a stylesheet), the assertion can't see it, because it only ever looks at the main HTML response. The test reports success even when half the page didn't load.",
+                        "Open the Response Assertion and change the scope dropdown from 'Main sample only' (or blank, which means the same thing) to 'Main sample and sub-samples'. After the change, the assertion will evaluate the main page and every embedded resource, so a broken sub-request shows up as a test failure. If you genuinely only care about the main response — say, you're asserting HTML content and don't care about asset availability — leave the scope alone and disable this check for that sampler."));
             }
         }
         return List.of();

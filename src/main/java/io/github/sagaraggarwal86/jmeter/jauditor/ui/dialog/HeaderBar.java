@@ -5,7 +5,6 @@ import java.awt.*;
 
 public final class HeaderBar extends JPanel {
 
-    private final JLabel title;
     private final JButton rescanBtn;
     private final JButton cancelBtn;
     private final JButton exportBtn;
@@ -13,9 +12,6 @@ public final class HeaderBar extends JPanel {
     public HeaderBar(Runnable onRescan, Runnable onCancel, Runnable onExportHtml, Runnable onExportJson) {
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
-
-        title = new JLabel("JAuditor");
-        add(title, BorderLayout.WEST);
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         rescanBtn = new JButton("Rescan");
@@ -37,11 +33,6 @@ public final class HeaderBar extends JPanel {
         right.add(cancelBtn);
         right.add(exportBtn);
         add(right, BorderLayout.EAST);
-    }
-
-    public void setTitleText(String jmxName, boolean dirty, boolean untitled) {
-        if (untitled) title.setText("JAuditor — untitled");
-        else title.setText("JAuditor — " + jmxName + (dirty ? " •" : ""));
     }
 
     public void applyState(DialogState s, boolean hasFindings) {

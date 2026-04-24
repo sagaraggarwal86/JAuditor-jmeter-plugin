@@ -47,8 +47,8 @@ public final class ThreadGroupZeroDurationRule extends AbstractRule {
         if (dur == null || dur.isBlank() || "0".equals(dur.trim())) {
             return List.of(make(ctx.pathFor(node),
                     "Thread Group scheduler enabled with zero duration",
-                    "Scheduler is enabled but duration is blank or zero. Test will stop immediately.",
-                    "Set a positive duration, or disable the scheduler."));
+                    "This Thread Group has its scheduler switched on but no duration filled in (the field is empty or set to 0). JMeter reads that as 'run for zero seconds' — so the moment the test starts, the scheduler tells the threads they're already out of time and they shut down before any meaningful work happens.",
+                    "Pick one of two fixes. If you want a time-boxed run, enter how long the test should last in the Duration field in seconds — for example, 300 for a five-minute run. If you'd rather end the test based on iterations instead of time, turn the scheduler off entirely and let the Loop Count drive when it stops. Leaving the scheduler on with no duration never does what anyone wants."));
         }
         return List.of();
     }

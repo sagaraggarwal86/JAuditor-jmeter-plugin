@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.sagaraggarwal86</groupId>
-    <artifactId>jauditor-jmeter-plugin</artifactId>
-    <version>0.1.0</version>
+    <artifactId>jmxauditor-jmeter-plugin</artifactId>
+    <version>0.2.0</version>
     <packaging>jar</packaging>
 
-    <name>JAuditor</name>
+    <name>JMXAuditor</name>
     <description>JMeter Script Auditor — static analysis plugin for JMeter 5.6.3 test plans.</description>
-    <url>https://github.com/sagaraggarwal86/JAuditor-jmeter-plugin</url>
+    <url>https://github.com/sagaraggarwal86/JMXAuditor-jmeter-plugin</url>
 
     <licenses>
         <license>
@@ -29,9 +29,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:https://github.com/sagaraggarwal86/JAuditor-jmeter-plugin.git</connection>
-        <developerConnection>scm:git:https://github.com/sagaraggarwal86/JAuditor-jmeter-plugin.git</developerConnection>
-        <url>https://github.com/sagaraggarwal86/JAuditor-jmeter-plugin</url>
+        <connection>scm:git:https://github.com/sagaraggarwal86/JMXAuditor-jmeter-plugin.git</connection>
+        <developerConnection>scm:git:https://github.com/sagaraggarwal86/JMXAuditor-jmeter-plugin.git</developerConnection>
+        <url>https://github.com/sagaraggarwal86/JMXAuditor-jmeter-plugin</url>
         <tag>HEAD</tag>
     </scm>
 
@@ -149,7 +149,7 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <artifactSet>
                                 <includes>
-                                    <include>io.github.sagaraggarwal86:jauditor-jmeter-plugin</include>
+                                    <include>io.github.sagaraggarwal86:jmxauditor-jmeter-plugin</include>
                                 </includes>
                             </artifactSet>
                         </configuration>

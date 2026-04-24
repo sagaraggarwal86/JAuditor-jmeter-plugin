@@ -1,0 +1,112 @@
+package io.github.sagaraggarwal86.jmeter.jmxauditor.ui.session;
+
+import io.github.sagaraggarwal86.jmeter.jmxauditor.model.ScanResult;
+import io.github.sagaraggarwal86.jmeter.jmxauditor.util.EdtAssertions;
+
+import java.awt.*;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+public final class JMXAuditorSession {
+
+    private static final JMXAuditorSession INSTANCE = new JMXAuditorSession();
+    private final Set<String> hiddenRuleIds = new HashSet<>();
+    private Dimension dialogSize;
+    private Point dialogLocation;
+    private Path lastHtmlExportDir;
+    private Path lastJsonExportDir;
+    private boolean suppressUnsavedPrompt;
+    private ScanResult currentFindings;
+
+    private JMXAuditorSession() {
+    }
+
+    public static JMXAuditorSession get() {
+        return INSTANCE;
+    }
+
+    public Dimension dialogSize() {
+        return dialogSize;
+    }
+
+    public void setDialogSize(Dimension d) {
+        EdtAssertions.assertEdt();
+        this.dialogSize = d;
+    }
+
+    public Point dialogLocation() {
+        return dialogLocation;
+    }
+
+    public void setDialogLocation(Point p) {
+        EdtAssertions.assertEdt();
+        this.dialogLocation = p;
+    }
+
+    public Path lastHtmlExportDir() {
+        return lastHtmlExportDir;
+    }
+
+    public void setLastHtmlExportDir(Path p) {
+        EdtAssertions.assertEdt();
+        this.lastHtmlExportDir = p;
+    }
+
+    public Path lastJsonExportDir() {
+        return lastJsonExportDir;
+    }
+
+    public void setLastJsonExportDir(Path p) {
+        EdtAssertions.assertEdt();
+        this.lastJsonExportDir = p;
+    }
+
+    public boolean suppressUnsavedPrompt() {
+        return suppressUnsavedPrompt;
+    }
+
+    public void setSuppressUnsavedPrompt(boolean v) {
+        EdtAssertions.assertEdt();
+        this.suppressUnsavedPrompt = v;
+    }
+
+    public Set<String> hiddenRuleIds() {
+        return Collections.unmodifiableSet(hiddenRuleIds);
+    }
+
+    public void addHiddenRule(String ruleId) {
+        EdtAssertions.assertEdt();
+        hiddenRuleIds.add(ruleId);
+    }
+
+    public void clearHiddenRules() {
+        EdtAssertions.assertEdt();
+        hiddenRuleIds.clear();
+    }
+
+    public ScanResult currentFindings() {
+        return currentFindings;
+    }
+
+    public void setCurrentFindings(ScanResult r) {
+        EdtAssertions.assertEdt();
+        this.currentFindings = r;
+    }
+
+    public void clearOnDialogClose() {
+        EdtAssertions.assertEdt();
+        this.currentFindings = null;
+    }
+
+    void reset() {
+        dialogSize = null;
+        dialogLocation = null;
+        lastHtmlExportDir = null;
+        lastJsonExportDir = null;
+        suppressUnsavedPrompt = false;
+        hiddenRuleIds.clear();
+        currentFindings = null;
+    }
+}

@@ -6,14 +6,14 @@
     <Match>
         <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2,MS_EXPOSE_REP"/>
     </Match>
-    <!-- currentDialog is intentionally static: only one JAuditor dialog per JMeter process. -->
+    <!-- currentDialog is intentionally static: only one JMXAuditor dialog per JMeter process. -->
     <Match>
-        <Class name="io.github.sagaraggarwal86.jmeter.jauditor.ui.action.AuditCommand"/>
+        <Class name="io.github.sagaraggarwal86.jmeter.jmxauditor.ui.action.AuditCommand"/>
         <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
     </Match>
     <!-- redact() collapses null/empty and non-empty to the same "****" sentinel on purpose. -->
     <Match>
-        <Class name="io.github.sagaraggarwal86.jmeter.jauditor.util.JAuditorLog"/>
+        <Class name="io.github.sagaraggarwal86.jmeter.jmxauditor.util.JMXAuditorLog"/>
         <Bug pattern="DB_DUPLICATE_BRANCHES"/>
     </Match>
     <!-- Redundant-null-check warnings — defensive null guards retained for JMeter API drift. -->

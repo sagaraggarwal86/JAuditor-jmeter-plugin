@@ -52,6 +52,28 @@
         <assertj.version>3.25.3</assertj.version>
     </properties>
 
+    <!-- BOMs align transitive jackson-* and junit-* versions, preventing the
+         CI-only NoClassDefFoundError where log4j-core probes for ObjectMapper
+         and hits a jackson-annotations / jackson-databind version skew. -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.jmeter</groupId>

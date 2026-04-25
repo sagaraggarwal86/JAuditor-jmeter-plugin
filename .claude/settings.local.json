@@ -25,7 +25,9 @@
       "PowerShell(mvn *)",
       "PowerShell(git push *)",
       "Bash(mvn -B -ntp clean verify)",
-      "PowerShell(git rm *)"
+      "PowerShell(git rm *)",
+      "Bash(git *)",
+      "PowerShell(git *)"
     ]
   }
 }

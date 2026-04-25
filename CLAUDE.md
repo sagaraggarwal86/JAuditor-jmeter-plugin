@@ -45,7 +45,7 @@ Read-only (never modifies `.jmx`), zero runtime impact, GUI-only. Stability over
   the recommendation. Trivial choices use prose.
 
   | Option | Risk | Effort | Impact | Recommendation |
-          |--------|------|--------|--------|----------------|
+            |--------|------|--------|--------|----------------|
 
 ## Examples
 
